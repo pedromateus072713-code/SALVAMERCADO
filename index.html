@@ -6,6 +6,7 @@
 <title>SalvaMercado — Comida boa, preço de fim de prazo</title>
 <meta name="description" content="Reserve produtos frescos perto do vencimento com até 70% de desconto em mercados, padarias e hortifrútis perto de você. Retire em até 3 horas e pague pelo Pix ou na loja.">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.109.0/dist/umd/supabase.js"></script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1687,6 +1688,9 @@ html.is-app .topbar { display: none; }
   .trk-bar { position: relative; padding-bottom: 18px; }
   .trk-bar small { display: none; }
 }
+
+/* ---------- Com backend (Supabase) ---------- */
+html.sb-on .demo-box, html.sb-on [data-demo], html.sb-on [data-action="demo-store"], html.sb-on .ft-reset, html.sb-on [data-auth-tab="whats"] { display: none !important; }
 </style>
 </head>
 <body>
@@ -5419,7 +5423,7 @@ function loadState() {
   if (upq && upq.legalName === 'Padaria Pão Quente Ltda.') { upq.legalName = 'Padaria Cheirinho de Pão Ltda.'; save('users'); }
   if (!S.guest) { try { const g = window.sessionStorage.getItem(K.guest); if (g) S.guest = JSON.parse(g); } catch (e) { /* ignore */ } }
 }
-function save(key) { store.set(K[key], S[key]); }
+function save(key) { if (sbOn() && sbSave(key)) return; store.set(K[key], S[key]); }
 
 function resetDemo() {
   Object.keys(K).forEach((k) => store.del(K[k]));
@@ -6206,6 +6210,7 @@ function wireAuth(m, st, draw) {
   if (ff) ff.addEventListener('submit', (e) => {
     e.preventDefault(); clearErrs(ff);
     if (!setErr(ff, 'fgEmail', isEmail($('#fgEmail').value) ? '' : 'Informe um e-mail válido.')) return;
+    if (sbOn()) { sbForgot($('#fgEmail').value.trim()); return; }
     closeModal(); toast('Se houver uma conta com este e-mail, enviaremos o link em instantes.', { type: 'info' });
   });
   const pf = m.querySelector('#pfForm');
@@ -6220,6 +6225,7 @@ function wireAuth(m, st, draw) {
     ok = setErr(pf, 'pfPass', v.pass.length >= 6 && /[a-z]/i.test(v.pass) && /\d/.test(v.pass) ? '' : 'Use 6+ caracteres com letras e números.') && ok;
     ok = setErr(pf, 'pfTerms', $('#pfTerms').checked ? '' : 'É preciso aceitar os termos para continuar.') && ok;
     if (!ok) { const first = pf.querySelector('.invalid'); if (first) first.focus(); return; }
+    if (sbOn()) { sbSignup('pf', v, null, st.after, pf); return; }
     const u = { id: uid('u'), type: 'pf', name: v.name, email: v.email, pass: passHash(v.email, v.pass), cpf: maskCPF(v.cpf), phone: maskPhone(v.phone), optin: $('#pfOptin').checked, createdAt: Date.now() };
     S.users.push(u); save('users');
     startSession(u, st.after, 'Conta criada! Bem-vinda(o), ' + firstName(u.name) + '.');
@@ -6269,6 +6275,7 @@ function wireAuth(m, st, draw) {
       distance: kmFromMap([mx, my]), rating: 5, reviews: 0, map: [mx, my],
       about: 'Nova loja parceira da SalvaMercado.', verified: false, phone: maskPhone(d.phone), createdAt: Date.now()
     };
+    if (sbOn()) { sbSignup('pj', d, st0, '#/empresa?tab=novo', p3); return; }
     S.stores.push(st0); save('stores');
     const u = { id: uid('u'), type: 'pj', name: d.resp, email: d.email, pass: passHash(d.email, d.pass), storeId: sid, cnpj: maskCNPJ(d.cnpj), legalName: d.legalName, phone: maskPhone(d.phone), createdAt: Date.now() };
     S.users.push(u); save('users');
@@ -6276,6 +6283,7 @@ function wireAuth(m, st, draw) {
   });
 }
 function doLogin(email, pass, after) {
+  if (sbOn()) { sbLogin(String(email).trim().toLowerCase(), pass, after, document.querySelector('#loginForm')); return true; }
   const u = S.users.find((x) => x.email === String(email).trim().toLowerCase());
   if (!u || u.pass !== passHash(u.email, pass)) return false;
   startSession(u, after, u.type === 'pj' ? 'Bem-vindo ao painel, ' + (userStore(u) || u).name + '!' : 'Olá, ' + firstName(u.name) + '!');
@@ -6291,6 +6299,7 @@ function startSession(u, after, msg) {
   else render();
 }
 function logout() {
+  if (sbOn()) { sbLogout(); return; }
   S.session = null; store.del(K.session); setTabSession(null);
   closePops();
   renderHeaderAccount();
@@ -6932,6 +6941,7 @@ function pageCheckout() {
       fieldHTML({ id: 'ckPhone', label: 'WhatsApp', required: true, mask: 'phone', auto: 'tel', value: g.phone, ph: '(41) 90000-0000' }) + '</div>' +
       '<label class="check"><input type="checkbox" id="ckRemember" checked> Lembrar meus dados neste dispositivo para reservar com 1 clique</label>';
   }
+  if (sbOn() && !u) ident = sbLoginPromptHTML();
   if (isDlv()) CK.pay = 'pixnow';
   const dIssue = dlvCheckIssues(groups), dFee = dlvFeeTotal(groups);
   const slotOpts = [[30, 'Em até 30 minutos'], [60, 'Em até 1 hora'], [120, 'Em até 2 horas'], [180, 'Em até 3 horas']];
@@ -6981,6 +6991,7 @@ function mountCheckout() {
   form.addEventListener('submit', (e) => { e.preventDefault(); placeOrder(form); });
 }
 function placeOrder(form) {
+  if (sbOn()) return sbPlaceOrder(form);
   cleanCart();
   if (!S.cart.length) { toast('Sua sacola ficou vazia: alguns itens esgotaram.', { type: 'error' }); render(); return; }
   const u = currentUser();
@@ -7948,6 +7959,7 @@ function onClick(e) {
   }
 }
 function cancelOrder(o) {
+  if (sbOn()) { if (o) sbRpc('cancel_order', { p_code: o.code }); return; }
   if (!o || o.status !== 'pendente') return;
   o.status = 'cancelado';
   o.items.forEach((it) => { const p = productById(it.id); if (p) p.stock += it.qty; });
@@ -7979,6 +7991,7 @@ function init() {
   window.addEventListener('storage', (e) => { if (e.key && e.key.indexOf('sm3_') === 0) { const before = orderSnap(); loadState(); renderHeaderAccount(); updateCartBadge(); render(); orderNotify(before); } });
   setupPWA(); setupOffline(); setupCookies();
   render();
+  sbBoot();
   setInterval(tick, 1000);
 }
 document.addEventListener('DOMContentLoaded', init);
@@ -8259,6 +8272,7 @@ function setupCookies() {
 
 /* ---------- Ações extras ---------- */
 function extraAction(action, a) {
+  if (sbAction(action, a)) return true;
   if (dlvAction(action, a)) return true;
   switch (action) {
     case 'stage': setStage(a.dataset.code, a.dataset.to); return true;
@@ -8867,6 +8881,437 @@ function dlvBizHTML(o) {
 
 ROUTES.push([/^#\/delivery$/, pageDelivery]);
 ROUTES.push([/^#\/pedido\/([\w-]+)$/, pageTrack]);
+
+
+/* =====================================================================
+   Backend (Supabase): login, lojas, produtos e pedidos no servidor.
+   Se o Supabase não responder, o site continua no modo demonstração local.
+   ===================================================================== */
+const SB_URL = 'https://dozvstbsjvpiplnokgyz.supabase.co';
+const SB_KEY = 'sb_publishable_d3CPcZSowO68I2S5mzp3mg_JzzfT-bl';
+const OVL_KEY = 'sm3_ovl';
+const OVL_FIELDS = ['eta', 'km', 'addrLL', 'courierFrom', 'sim', 'courier', 'path', 'pathIn', 'chat', 'said', 'unread', 'meet', 'arrivedAt', 'routeMs', 'confirm'];
+let SB = null;
+const SBX = { on: false, booting: false, snapP: {}, snapS: {}, ch: null, chCat: null, poll: null, t: null, seen: null };
+
+function sbOn() { return SBX.on; }
+function sbErr(e) {
+  const m = (e && (e.message || e.error_description)) || String(e || '');
+  if (/Failed to fetch|NetworkError|fetch/i.test(m)) return 'Sem conexão com o servidor. Verifique sua internet e tente de novo.';
+  if (/JWT|session|not authenticated|Não autenticado/i.test(m)) return 'Sua sessão expirou. Entre de novo na sua conta.';
+  return m;
+}
+
+/* ---------- Conversão banco ⇄ site ---------- */
+function mapStore(r) {
+  const map = r.map_x != null && r.map_y != null ? [r.map_x, r.map_y] : [200 + (hashStr(r.id) % 260), 100 + (hashStr(r.id + 'y') % 260)];
+  return {
+    id: r.id, ownerId: r.owner_id, name: r.name, short: r.short || (r.name || '?').slice(0, 2).toUpperCase(), type: r.type || 'Mercearia / Empório',
+    color: r.color || '#00807d', district: r.district || '', address: r.address || '', city: r.city || 'Curitiba', cep: r.cep || '', phone: r.phone || '',
+    open: r.open_hour != null ? r.open_hour : 7, close: r.close_hour != null ? r.close_hour : 21, rating: +r.rating || 5, reviews: r.reviews || 0,
+    map, distance: r.distance_km != null ? +r.distance_km : kmFromMap(map), about: r.about || '', verified: !!r.verified, paused: !!r.paused,
+    createdAt: new Date(r.created_at).getTime()
+  };
+}
+function mapProduct(r) {
+  return {
+    id: r.id, storeId: r.store_id, name: r.name, cat: r.cat, art: r.art || 'cesta', img: r.img_url || null, orig: +r.orig, price: +r.price,
+    promo: r.promo, expiry: r.expires_on, stock: r.stock, kg: +r.kg || 0.5, active: r.active !== false, desc: r.description || '',
+    createdAt: new Date(r.created_at).getTime()
+  };
+}
+function prodRow(p) {
+  return {
+    id: p.id, store_id: p.storeId, name: p.name, cat: p.cat, art: p.art || null, img_url: p.img || null, orig: +p.orig, price: +p.price,
+    promo: p.promo || 'percent', expires_on: expiryOf(p), stock: Math.max(0, p.stock | 0), kg: +p.kg || 0.5, active: p.active !== false,
+    description: p.desc || null
+  };
+}
+function storeRow(s) {
+  return { name: s.name, type: s.type, color: s.color, district: s.district, address: s.address, phone: s.phone || null,
+    open_hour: s.open, close_hour: s.close, about: s.about || null, paused: !!s.paused };
+}
+function snapOf(list, rowFn) { const m = {}; list.forEach((x) => { m[x.id] = JSON.stringify(rowFn(x)); }); return m; }
+function mapOrder(r, ov) {
+  const t = (x) => (x ? new Date(x).getTime() : null);
+  const sa = {}; Object.keys(r.stage_at || {}).forEach((k) => { sa[k] = t(r.stage_at[k]); });
+  const items = (r.items || []).map((i) => ({ id: i.id, name: i.name, art: i.art, img: null, qty: +i.qty, unit: +i.unit, orig: +i.orig, promo: i.promo }));
+  const created = t(r.created_at);
+  const o = {
+    code: r.code, batch: r.batch, storeId: r.store_id, userId: r.customer_id, device: false,
+    customer: { name: r.customer_name, phone: r.customer_phone || '' }, items,
+    subtotal: +r.subtotal, discount: +r.discount || 0, coupon: r.coupon, total: +r.total, savings: +r.savings,
+    kg: (r.items || []).reduce((a, i) => a + (+i.kg || 0.5) * (+i.qty), 0),
+    payment: { method: r.pay_method, paid: !!r.paid, paidAt: sa.pago || null, pixExp: created + PIX_MIN * 60000 },
+    slot: 60, notes: r.notes || '', createdAt: created, pickupFrom: t(r.pickup_from) || created, expiresAt: t(r.expires_at),
+    status: r.status, stage: r.stage, stageAt: sa, cancelBy: r.cancel_by, pickedAt: t(r.picked_at), mode: r.mode,
+    fee: +r.fee || 0, addr: r.address, dcode: r.delivery_code
+  };
+  if (r.status === 'retirado' && r.stage === 'retirado') delete o.stage;
+  if (ov) {
+    OVL_FIELDS.forEach((f) => { if (ov[f] !== undefined) o[f] = ov[f]; });
+    if (ov.pixExp) o.payment.pixExp = ov.pixExp;
+    if (o.mode === 'delivery' && ov.stage && o.status === 'pendente') {
+      const ord = DSTAGES.map((x) => x[0]);
+      if (ord.indexOf(ov.stage) > ord.indexOf(o.stage)) { o.stage = ov.stage; o.stageAt = Object.assign({}, o.stageAt, ov.stageAt || {}); }
+    }
+  }
+  if (o.mode === 'delivery') {
+    if (!o.eta && o.addr) { const s = storeById(o.storeId); const q = s ? dlvQuote(s, o.addr) : null; if (q && !q.out) { o.eta = [q.min, q.max]; o.km = q.km; } }
+    if (!o.eta) o.eta = [30, 40];
+    if (!o.addrLL && o.addr) o.addrLL = addrLL(o.addr);
+    if (o.status === 'retirado') o.stage = 'entregue';
+  }
+  return o;
+}
+
+/* ---------- Leitura ---------- */
+async function sbLoadCatalog() {
+  const [st, pr] = await Promise.all([
+    SB.from('stores').select('*').order('created_at').order('id'),
+    SB.from('products').select('*').order('created_at', { ascending: false })
+  ]);
+  if (st.error || pr.error) throw (st.error || pr.error);
+  S.stores = st.data.map(mapStore);
+  S.products = pr.data.map(mapProduct);
+  SBX.snapP = snapOf(S.products, prodRow);
+  SBX.snapS = snapOf(S.stores, storeRow);
+  if (!storeById(S.prefs.storeId) && S.stores[0]) S.prefs.storeId = S.stores[0].id;
+  return true;
+}
+async function sbLoadUser() {
+  const { data } = await SB.auth.getSession();
+  const session = data && data.session;
+  if (!session) { S.users = []; S.session = null; return null; }
+  const id = session.user.id, md = session.user.user_metadata || {};
+  const { data: p } = await SB.from('profiles').select('*').eq('id', id).maybeSingle();
+  const u = {
+    id, type: (p && p.type) || md.type || 'pf', name: (p && p.name) || md.name || session.user.email, email: session.user.email,
+    phone: (p && p.phone) || md.phone || '', storeId: (p && p.store_id) || null, cpf: md.cpf || '', cnpj: md.cnpj || '', legalName: md.legalName || '',
+    optin: !!md.optin, createdAt: new Date(session.user.created_at).getTime(), meta: md
+  };
+  S.users = [u]; S.session = { userId: id, at: Date.now() };
+  return u;
+}
+async function sbLoadOrders() {
+  if (!currentUser()) { S.orders = []; return; }
+  const { data, error } = await SB.from('orders').select('*').order('created_at', { ascending: false }).limit(300);
+  if (error) throw error;
+  const ov = store.get(OVL_KEY, {});
+  S.orders = data.map((r) => mapOrder(r, ov[r.code]));
+}
+
+/* ---------- Escrita (o banco valida as permissões) ---------- */
+function sbSave(key) {
+  if (key === 'orders') { sbSaveOverlay(); return true; }
+  if (key === 'products') { sbSyncProducts(); return true; }
+  if (key === 'stores') { sbSyncStores(); return true; }
+  if (key === 'users') { sbSyncProfile(); return true; }
+  if (key === 'session') return true;
+  return false;
+}
+function sbSaveOverlay() {
+  const m = store.get(OVL_KEY, {});
+  S.orders.forEach((o) => {
+    if (o.mode !== 'delivery' && !(o.payment && o.payment.pixExp)) return;
+    const x = {};
+    OVL_FIELDS.forEach((f) => { if (o[f] !== undefined) x[f] = o[f]; });
+    if (o.mode === 'delivery') { x.stage = o.stage; x.stageAt = o.stageAt; }
+    if (o.payment && o.payment.pixExp) x.pixExp = o.payment.pixExp;
+    m[o.code] = x;
+  });
+  store.set(OVL_KEY, m);
+}
+async function sbSyncProducts() {
+  const u = currentUser();
+  if (!u || u.type !== 'pj' || !u.storeId) return;
+  const mine = S.products.filter((p) => p.storeId === u.storeId);
+  const ups = mine.filter((p) => SBX.snapP[p.id] !== JSON.stringify(prodRow(p))).map(prodRow);
+  const ids = mine.map((p) => p.id);
+  const dels = Object.keys(SBX.snapP).filter((id) => ids.indexOf(id) < 0 && JSON.parse(SBX.snapP[id]).store_id === u.storeId);
+  try {
+    if (ups.length) { const r = await SB.from('products').upsert(ups); if (r.error) throw r.error; }
+    if (dels.length) { const r = await SB.from('products').delete().in('id', dels); if (r.error) throw r.error; }
+    mine.forEach((p) => { SBX.snapP[p.id] = JSON.stringify(prodRow(p)); });
+    dels.forEach((id) => { delete SBX.snapP[id]; });
+  } catch (e) {
+    toast('Não foi possível salvar no servidor: ' + sbErr(e), { type: 'error', ms: 6000 });
+    await sbLoadCatalog().catch(() => {}); render();
+  }
+}
+async function sbSyncStores() {
+  const u = currentUser();
+  if (!u || u.type !== 'pj' || !u.storeId) return;
+  const s = storeById(u.storeId); if (!s) return;
+  const row = storeRow(s);
+  if (SBX.snapS[s.id] === JSON.stringify(row)) return;
+  const r = await SB.from('stores').update(row).eq('id', s.id);
+  if (r.error) { toast('Não foi possível salvar a loja: ' + sbErr(r.error), { type: 'error' }); await sbLoadCatalog().catch(() => {}); render(); return; }
+  SBX.snapS[s.id] = JSON.stringify(row);
+}
+async function sbSyncProfile() {
+  const u = currentUser(); if (!u) return;
+  const r = await SB.from('profiles').update({ name: u.name, phone: u.phone || null }).eq('id', u.id);
+  if (r.error) toast('Não foi possível salvar seus dados: ' + sbErr(r.error), { type: 'error' });
+}
+async function sbRpc(fn, args, okMsg, after) {
+  const { error } = await SB.rpc(fn, args);
+  if (error) toast(sbErr(error), { type: 'error', ms: 6000 });
+  else { if (after) after(); if (okMsg) toast(okMsg); }
+  try { await sbLoadOrders(); if (fn !== 'mark_paid') await sbLoadCatalog(); } catch (e) { /* ignore */ }
+  renderHeaderAccount(); sbRerender(true);
+  return !error;
+}
+
+/* ---------- Login, cadastro e sessão ---------- */
+async function sbLogin(email, pass, after, form) {
+  const btn = form && form.querySelector('button.btn-primary');
+  if (btn) { btn.disabled = true; btn.dataset.txt = btn.innerHTML; btn.textContent = 'Entrando…'; }
+  const { error } = await SB.auth.signInWithPassword({ email, password: pass });
+  if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.txt; }
+  if (error) {
+    const msg = /confirm/i.test(error.message) ? 'Confirme seu e-mail antes de entrar. Veja sua caixa de entrada (e o spam).' : /fetch/i.test(error.message) ? sbErr(error) : 'E-mail ou senha incorretos.';
+    if (form) setErr(form, 'lgPass', msg); else toast(msg, { type: 'error' });
+    return;
+  }
+  await sbAfterAuth(after);
+}
+async function sbAfterAuth(after, msg) {
+  const u = await sbLoadUser();
+  if (!u) return;
+  if (u.type === 'pj' && !u.storeId && u.meta && u.meta.store) {
+    const r = await SB.rpc('create_store', { p: u.meta.store });
+    if (!r.error) u.storeId = r.data;
+  }
+  try { await sbLoadCatalog(); await sbLoadOrders(); } catch (e) { toast(sbErr(e), { type: 'error' }); }
+  SBX.seen = null; sbSubscribe();
+  updateCartBadge();
+  startSession(u, after, msg || (u.type === 'pj' ? 'Bem-vindo ao painel, ' + ((userStore(u) || u).name) + '!' : 'Olá, ' + firstName(u.name) + '!'));
+}
+async function sbSignup(type, v, storeData, after, form) {
+  const btn = form.querySelector('button.btn-primary');
+  if (btn) { btn.disabled = true; btn.dataset.txt = btn.innerHTML; btn.textContent = 'Criando conta…'; }
+  const meta = type === 'pj'
+    ? { type: 'pj', name: v.resp, phone: maskPhone(v.phone), cnpj: maskCNPJ(v.cnpj), legalName: v.legalName,
+        store: { name: storeData.name, short: storeData.short, type: storeData.type, color: storeData.color, district: storeData.district, address: storeData.address,
+          city: storeData.city, cep: storeData.cep, phone: storeData.phone, open: storeData.open, close: storeData.close, about: storeData.about,
+          map_x: storeData.map[0], map_y: storeData.map[1], distance: storeData.distance } }
+    : { type: 'pf', name: v.name, phone: maskPhone(v.phone), cpf: maskCPF(v.cpf), optin: !!($('#pfOptin') && $('#pfOptin').checked) };
+  const { data, error } = await SB.auth.signUp({ email: v.email, password: v.pass, options: { data: meta, emailRedirectTo: location.origin + location.pathname } });
+  if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.txt; }
+  const field = type === 'pj' ? 'pjEmail' : 'pfEmail';
+  if (error) { setErr(form, field, /registered|already|exists/i.test(error.message) ? 'Este e-mail já está cadastrado. Entre na sua conta.' : sbErr(error)); return; }
+  if (data && data.user && Array.isArray(data.user.identities) && !data.user.identities.length) { setErr(form, field, 'Este e-mail já está cadastrado. Entre na sua conta.'); return; }
+  if (!data.session) {
+    openModal('<div class="doc"><h3>Confirme seu e-mail</h3><p>Enviamos um link de confirmação para <b>' + esc(v.email) + '</b>. Abra o e-mail (veja também o spam), clique no link e depois entre com seu e-mail e senha.</p>' +
+      '<button class="btn btn-primary btn-block" data-action="open-auth" data-tab="login">Já confirmei, quero entrar</button></div>', { cls: 'modal-sm', label: 'Confirme seu e-mail' });
+    return;
+  }
+  await sbAfterAuth(type === 'pj' ? '#/empresa?tab=novo' : after,
+    type === 'pj' ? 'Empresa cadastrada. Agora publique sua primeira oferta.' : 'Conta criada. Bem-vinda(o), ' + firstName(v.name) + '.');
+}
+async function sbLogout() {
+  try { await SB.auth.signOut(); } catch (e) { /* ignore */ }
+  if (SBX.ch) { SB.removeChannel(SBX.ch); SBX.ch = null; }
+  S.users = []; S.session = null; S.orders = [];
+  try { await sbLoadCatalog(); } catch (e) { /* ignore */ }
+  closePops(); renderHeaderAccount(); updateCartBadge();
+  toast('Você saiu da sua conta.', { type: 'info' });
+  if (/^#\/(empresa|conta|pedido)/.test(location.hash)) location.hash = '#/'; else render();
+}
+async function sbForgot(email) {
+  const { error } = await SB.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  closeModal();
+  toast(error ? sbErr(error) : 'Se houver uma conta com este e-mail, enviamos o link para criar uma nova senha.', { type: error ? 'error' : 'info', ms: 6000 });
+}
+function sbNewPassword() {
+  openModal('<form class="form" id="npForm" novalidate><h3>Crie uma nova senha</h3>' + fieldHTML({ id: 'npPass', label: 'Nova senha', type: 'password', required: true, hint: '6+ caracteres com letras e números.' }) +
+    '<button class="btn btn-primary btn-block">Salvar nova senha</button></form>', {
+    cls: 'modal-sm', label: 'Nova senha', onMount: (m) => {
+      const f = m.querySelector('#npForm');
+      f.addEventListener('submit', async (e) => {
+        e.preventDefault(); clearErrs(f);
+        const pw = $('#npPass').value;
+        if (!setErr(f, 'npPass', pw.length >= 6 && /[a-z]/i.test(pw) && /\d/.test(pw) ? '' : 'Use 6+ caracteres com letras e números.')) return;
+        const { error } = await SB.auth.updateUser({ password: pw });
+        if (error) { setErr(f, 'npPass', sbErr(error)); return; }
+        closeModal(); toast('Senha alterada. Você já está conectado.');
+        await sbAfterAuth(null, 'Senha alterada.');
+      });
+    }
+  });
+}
+
+/* ---------- Pedido ---------- */
+async function sbPlaceOrder() {
+  const u = currentUser();
+  if (!u) { toast('Entre ou crie sua conta para finalizar o pedido.', { type: 'info' }); openAuth('login', 'pf', '#/checkout'); return; }
+  if (u.type === 'pj') return;
+  cleanCart();
+  if (!S.cart.length) { toast('Sua sacola ficou vazia: alguns itens esgotaram.', { type: 'error' }); render(); return; }
+  const groups = cartGroups();
+  if (isDlv() && dlvCheckIssues(groups)) { render(); return; }
+  if (isDlv()) CK.pay = 'pixnow';
+  const btn = $('#ckSubmit'), old = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando pedido…'; }
+  const notes = $('#ckNotes') ? $('#ckNotes').value.trim() : '';
+  const batch = 'R' + Date.now().toString(36).toUpperCase();
+  const t = cartTotals(), coupon = t.coupon && t.coupon.ok ? t.coupon.code : null;
+  const now = Date.now(), ovl = {};
+  try {
+    for (const g of groups) {
+      const q = isDlv() ? dlvQuote(g.store) : null;
+      const { data, error } = await SB.rpc('place_order', {
+        p_store: g.store.id, p_items: g.lines.map((l) => ({ id: l.p.id, qty: l.qty })), p_pay: CK.pay,
+        p_mode: isDlv() ? 'delivery' : 'pickup', p_address: isDlv() ? S.prefs.addr : null, p_fee: q ? q.fee : 0,
+        p_notes: notes || null, p_batch: batch, p_coupon: coupon
+      });
+      if (error) throw error;
+      if (isDlv()) { const f = dlvOrderFields(g.store, now); ovl[data] = { eta: f.eta, km: f.km, addrLL: f.addrLL, courierFrom: f.courierFrom, sim: f.sim, chat: [] }; }
+    }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = old; }
+    toast(sbErr(e), { type: 'error', ms: 7000 });
+    try { await sbLoadCatalog(); await sbLoadOrders(); } catch (x) { /* ignore */ }
+    cleanCart(); render(); return;
+  }
+  const m = store.get(OVL_KEY, {}); Object.assign(m, ovl); store.set(OVL_KEY, m);
+  S.cart = []; delete S.prefs.coupon; persistCart(); store.set(K.prefs, S.prefs);
+  try { await sbLoadOrders(); await sbLoadCatalog(); } catch (e) { /* ignore */ }
+  updateCartBadge(); renderHeaderAccount();
+  location.hash = '#/confirmacao/' + batch;
+}
+function sbLoginPromptHTML() {
+  return '<div class="ck-login"><button type="button" class="btn btn-primary" data-action="open-auth" data-tab="login" data-after="#/checkout">' + ICON.user + 'Entrar na minha conta</button>' +
+    '<button type="button" class="btn btn-ghost" data-action="open-auth" data-tab="signup" data-after="#/checkout">Criar conta grátis</button></div>' +
+    '<p class="small muted">' + ICON.shield + 'Para proteger seus pedidos e pagamentos, é preciso entrar na sua conta.</p>';
+}
+
+/* ---------- Ações que passam pelo servidor ---------- */
+function sbAction(act, a) {
+  if (!SBX.on) return false;
+  const code = a.dataset.code, o = code ? S.orders.find((x) => x.code === code) : null;
+  switch (act) {
+    case 'pickup':
+      if (!o) return true;
+      if (isDlvOrder(o)) return false;
+      sbRpc('confirm_pickup', { p_code: code }, 'Retirada confirmada: ' + code);
+      return true;
+    case 'pix-paid':
+      if (!o) return true;
+      sbRpc('mark_paid', { p_code: code }, 'Pagamento Pix confirmado. Agora é só retirar na loja.', () => { o.payment.paid = true; o.payment.paidAt = Date.now(); });
+      closeModal();
+      return true;
+    case 'stage':
+      sbRpc('advance_order', { p_code: code, p_stage: a.dataset.to }, a.dataset.to === 'pronto' ? 'Pedido ' + code + ' marcado como pronto. Avise o cliente pelo WhatsApp.' : 'Separação iniciada: ' + code);
+      return true;
+    case 'dlv-store-next': {
+      if (!o) return true;
+      const st = dlvStage(o), to = { confirmado: 'separacao', separacao: 'coleta', coleta: 'rota' }[st];
+      if (!to) return true;
+      dlvAdvanceTo(o, to); sbSaveOverlay();
+      sbRpc('advance_order', { p_code: code, p_stage: to }, to === 'coleta' ? 'Entregador chamado: ' + o.courier.name + ' · ' + o.courier.vehicle + ' · ' + o.courier.plate + '.' : to === 'rota' ? 'Pedido entregue ao entregador. Saiu para entrega.' : 'Separação iniciada: ' + code);
+      return true;
+    }
+    case 'dlv-confirm':
+      if (!o || dlvStage(o) !== 'rota') return false;
+      dlvDeliver(o); sbSaveOverlay(); dlvNotifyLocal(o); updateTrack(true);
+      sbRpc('customer_confirm_delivery', { p_code: code });
+      return true;
+    case 'delete-account':
+      confirmDialog('Excluir sua conta?', 'Seus dados pessoais serão apagados (LGPD). Reservas em andamento serão canceladas. Esta ação não pode ser desfeita.', 'Excluir conta', async () => {
+        const { error } = await SB.rpc('delete_my_account');
+        if (error) { toast(sbErr(error), { type: 'error' }); return; }
+        try { await SB.auth.signOut(); } catch (e) { /* ignore */ }
+        S.users = []; S.session = null; S.orders = [];
+        renderHeaderAccount(); location.hash = '#/'; toast('Conta excluída.', { type: 'info' });
+      }, true);
+      return true;
+    case 'reset-demo':
+      toast('Os dados ficam no servidor. Para renovar a demonstração, use o arquivo 05_renovar_demo.sql no Supabase.', { type: 'info', ms: 6000 });
+      return true;
+  }
+  return false;
+}
+
+/* ---------- Tempo real ---------- */
+function sbRerender(force) {
+  if (TRK) { updateTrack(true); return; }
+  const h = location.hash || '#/';
+  if (force || /^#\/(conta|confirmacao|empresa|delivery)/.test(h)) render();
+  else { renderHeaderAccount(); updateBottomNav(); }
+}
+function sbBeep() {
+  try { const c = new (window.AudioContext || window.webkitAudioContext)(); const o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; g.gain.value = 0.08; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.25); } catch (e) { /* ignore */ }
+}
+async function sbOrdersChanged() {
+  const before = orderSnap();
+  const had = SBX.seen || new Set(S.orders.map((o) => o.code));
+  try { await sbLoadOrders(); } catch (e) { return; }
+  const u = currentUser();
+  if (u && u.type === 'pj') {
+    S.orders.filter((o) => o.storeId === u.storeId && !had.has(o.code) && o.status === 'pendente').forEach((o) => {
+      const msg = 'Nova ' + (o.mode === 'delivery' ? 'entrega' : 'reserva') + ': ' + o.code + ' · ' + o.customer.name + ' · ' + brl(o.total);
+      toast(msg, { ms: 7000 }); systemNotify('SalvaMercado · Painel da loja', msg, '#/empresa?tab=reservas'); sbBeep();
+    });
+  }
+  SBX.seen = new Set(S.orders.map((o) => o.code));
+  orderNotify(before);
+  sbRerender();
+}
+function sbSubscribe() {
+  if (SBX.ch) { SB.removeChannel(SBX.ch); SBX.ch = null; }
+  if (!currentUser()) return;
+  SBX.seen = new Set(S.orders.map((o) => o.code));
+  SBX.ch = SB.channel('sm-orders-' + currentUser().id)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { clearTimeout(SBX.t); SBX.t = setTimeout(sbOrdersChanged, 250); })
+    .subscribe();
+}
+function sbSubscribeCatalog() {
+  SBX.chCat = SB.channel('sm-catalog')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+      clearTimeout(SBX.tc); SBX.tc = setTimeout(async () => {
+        try { await sbLoadCatalog(); } catch (e) { return; }
+        cleanCart(); updateCartBadge();
+        if (!TRK && !/^#\/(checkout|empresa)/.test(location.hash || '')) render();
+      }, 400);
+    })
+    .subscribe();
+}
+
+/* ---------- Inicialização ---------- */
+async function sbBoot() {
+  if (!window.supabase || !window.supabase.createClient) return;
+  SBX.booting = true;
+  try {
+    SB = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
+    await sbLoadCatalog();
+  } catch (e) {
+    if (window.SM_DEBUG) console.warn('Supabase indisponível, modo demonstração local.', e);
+    SB = null; SBX.booting = false; return;
+  }
+  SBX.on = true;
+  document.documentElement.classList.add('sb-on');
+  S.orders = []; S.users = []; S.session = null;
+  try { await sbLoadUser(); await sbLoadOrders(); } catch (e) { /* ignore */ }
+  SB.auth.onAuthStateChange((ev) => {
+    if (ev === 'PASSWORD_RECOVERY') setTimeout(sbNewPassword, 0);
+    if (ev === 'SIGNED_OUT' && S.session) setTimeout(() => { S.users = []; S.session = null; S.orders = []; renderHeaderAccount(); render(); }, 0);
+  });
+  if (/[?&](code|error)=/.test(location.search)) {
+    const hadErr = /error/.test(location.search);
+    history.replaceState(null, '', location.pathname + (location.hash || '#/'));
+    if (!currentUser()) toast(hadErr ? 'O link expirou ou já foi usado. Entre com seu e-mail e senha.' : 'E-mail confirmado. Agora é só entrar com seu e-mail e senha.', { type: 'info', ms: 7000 });
+  }
+  if (currentUser() && currentUser().type === 'pj' && !currentUser().storeId && currentUser().meta && currentUser().meta.store) {
+    const r = await SB.rpc('create_store', { p: currentUser().meta.store });
+    if (!r.error) { currentUser().storeId = r.data; await sbLoadCatalog().catch(() => {}); }
+  }
+  sbSubscribe(); sbSubscribeCatalog();
+  SBX.poll = setInterval(() => { if (currentUser() && document.visibilityState === 'visible') sbOrdersChanged(); }, 30000);
+  SBX.booting = false;
+  cleanCart(); renderHeaderAccount(); updateCartBadge(); render();
+}
 
 })();
 </script>

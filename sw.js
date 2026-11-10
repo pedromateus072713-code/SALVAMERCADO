@@ -1,5 +1,5 @@
 /* SalvaMercado · service worker: app instalável e funcionando sem internet */
-const VERSION = 'sm-v3';
+const VERSION = 'sm-v4';
 const EXT = VERSION + '-ext';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
@@ -24,7 +24,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   // Fontes e mapa: usa o que já foi guardado e atualiza em segundo plano
-  if (/fonts\.(googleapis|gstatic)\.com$|unpkg\.com$|cdnjs\.cloudflare\.com$|tile\.openstreetmap\.org$/.test(url.hostname)) {
+  if (/fonts\.(googleapis|gstatic)\.com$|unpkg\.com$|cdn\.jsdelivr\.net$|cdnjs\.cloudflare\.com$|tile\.openstreetmap\.org$/.test(url.hostname)) {
     e.respondWith(caches.open(EXT).then((c) => c.match(req).then((hit) => {
       const net = fetch(req).then((res) => { if (res.ok || res.type === 'opaque') c.put(req, res.clone()); return res; }).catch(() => hit);
       return hit || net;
