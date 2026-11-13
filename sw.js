@@ -1,5 +1,5 @@
 /* SalvaMercado · service worker: app instalável e funcionando sem internet */
-const VERSION = 'sm-v5';
+const VERSION = 'sm-v7';
 const EXT = VERSION + '-ext';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
