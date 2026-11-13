@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SalvaMercado — Comida boa, preço de fim de prazo</title>
+<title>SalvaMercado</title>
 <meta name="description" content="Reserve produtos frescos perto do vencimento com até 70% de desconto em mercados, padarias e hortifrútis perto de você. Retire em até 3 horas e pague pelo Pix ou na loja.">
 <link rel="manifest" href="manifest.webmanifest">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.109.0/dist/umd/supabase.js"></script>
@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
 <style>
 /* =====================================================================
-   SalvaMercado — identidade visual
+   SalvaMercado, identidade visual
    Paleta da arte: verde #00807d · verde-escuro #082b2a · amarelo #face3d
    vermelho #c83a0a · fundo #f3f4f2 · tipografia Archivo (normal + condensada)
    ===================================================================== */
@@ -1691,6 +1691,30 @@ html.is-app .topbar { display: none; }
 
 /* ---------- Com backend (Supabase) ---------- */
 html.sb-on .demo-box, html.sb-on [data-demo], html.sb-on [data-action="demo-store"], html.sb-on .ft-reset, html.sb-on [data-auth-tab="whats"] { display: none !important; }
+
+/* Painel master */
+.mst-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.mst-kpi { display: flex; flex-direction: column; gap: 4px; padding: 18px; }
+.mst-kpi small { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.mst-kpi b { font-size: 30px; font-weight: 850; line-height: 1.05; color: var(--green-d); font-variant-numeric: tabular-nums; }
+.mst-kpi span { color: var(--muted); font-size: 13px; }
+.mst .card h3 { margin: 0 0 12px; }
+.mst .tbl-wrap { overflow-x: auto; }
+.mst-tbl { min-width: 720px; }
+.mst-tbl tbody tr:hover { background: var(--surface-2); }
+.mst-wait { color: var(--muted); text-align: center; padding: 40px 20px; }
+.mst-filters { display: flex; gap: 14px; flex-wrap: wrap; }
+.mst-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.mst-filters select { min-width: 200px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit; color: var(--ink); }
+.mst-note { display: flex; gap: 10px; align-items: flex-start; background: var(--green-ll); color: var(--green-dd); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; margin: 0 0 14px; }
+.mst-note .ic { font-size: 18px; flex: none; }
+.mst-order { padding: 26px; min-width: min(520px, 80vw); }
+.mst-order h2 { margin: 0 0 2px; }
+.mst-dl { display: grid; gap: 10px; margin: 16px 0; }
+.mst-dl > div { display: grid; grid-template-columns: 130px 1fr; gap: 12px; }
+.mst-dl dt { color: var(--muted); font-size: 13px; font-weight: 700; }
+.mst-dl dd { margin: 0; }
+.mst-order .mst-note { margin: 0; }
 </style>
 </head>
 <body>
@@ -1706,7 +1730,7 @@ html.sb-on .demo-box, html.sb-on [data-demo], html.sb-on [data-action="demo-stor
 <noscript><p style="padding:24px;font-family:sans-serif">Ative o JavaScript para usar a SalvaMercado.</p></noscript>
 <script>
 /* =====================================================================
-   SalvaMercado — Biblioteca de ilustrações (SVG vetorial, sem emojis)
+   SalvaMercado, Biblioteca de ilustrações (SVG vetorial, sem emojis)
    Cada ilustração é desenhada num espaço 200x200 e servida como
    data URI (<img src>), o que isola IDs/estilos e permite cache.
    ===================================================================== */
@@ -4922,7 +4946,7 @@ var qrcode = function() {
 (function () {
 'use strict';
 /* =====================================================================
-   SalvaMercado — núcleo: configuração, utilitários, dados e estado
+   SalvaMercado, núcleo: configuração, utilitários, dados e estado
    ===================================================================== */
 
 /* ---------- Dados institucionais (substitua pelos dados reais) ---------- */
@@ -4930,7 +4954,7 @@ const COMPANY = {
   brand: 'SalvaMercado',
   legalName: 'SalvaMercado Tecnologia Ltda.',
   cnpj: '00.000.000/0001-00',
-  address: 'Av. Exemplo, 1000, sala 101 — Centro, Curitiba/PR',
+  address: 'Av. Exemplo, 1000, sala 101, Centro, Curitiba/PR',
   cep: 'CEP 80000-000',
   sac: '0800 000 0000',
   sacTel: '08000000000',
@@ -5042,7 +5066,7 @@ function isCNPJ(v) {
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
 const isPhone = (v) => { const n = digits(v).length; return n === 10 || n === 11; };
 
-/* SHA-256 (síncrono) — usado só para não guardar senha em texto puro no protótipo */
+/* SHA-256 (síncrono), usado só para não guardar senha em texto puro no protótipo */
 function sha256(str) {
   const ascii = unescape(encodeURIComponent(str));
   function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
@@ -5233,26 +5257,26 @@ const CAT_DESC = {
 const STORE_TYPES = ['Supermercado', 'Padaria', 'Hortifrúti', 'Confeitaria', 'Açougue', 'Atacarejo', 'Mercearia / Empório'];
 const STORE_COLORS = ['#0f7b4a', '#b8691d', '#1f5fa8', '#3f8a2a', '#8e2f50', '#5b3fa0', '#a3242d', '#0e7c86'];
 
-const PUCPR = { name: 'PUCPR', full: 'PUCPR — Câmpus Curitiba', address: 'Rua Imaculada Conceição, 1155 — Prado Velho, Curitiba/PR', map: [320, 250] };
+const PUCPR = { name: 'PUCPR', full: 'PUCPR, Câmpus Curitiba', address: 'Rua Imaculada Conceição, 1155, Prado Velho, Curitiba/PR', map: [320, 250] };
 const kmFromMap = (m) => Math.max(0.3, Math.round(Math.hypot(m[0] - PUCPR.map[0], m[1] - PUCPR.map[1]) / 105 * 10) / 10);
 const SEED_STORES = [
-  { id: 'bp', name: 'Mercado Bom Preço', short: 'BP', type: 'Supermercado', color: '#0f7b4a', district: 'Prado Velho', address: 'Rua Imaculada Conceição, 860 — Prado Velho', open: 7, close: 22, rating: 4.8, reviews: 312, map: [404, 300], about: 'Mercado de bairro com padaria própria, açougue e hortifrúti. Publica ofertas de fim de prazo todos os dias às 10h e às 16h.' },
-  { id: 'pq', name: 'Padaria Cheirinho de Pão', short: 'CP', type: 'Padaria', color: '#b8691d', district: 'Jardim Botânico', address: 'Av. Pres. Affonso Camargo, 1.180 — Jardim Botânico', open: 6, close: 21, rating: 4.9, reviews: 540, map: [238, 150], about: 'Pães de fermentação natural, salgados e doces. No fim da tarde, a produção do dia sai com até 50% de desconto.' },
-  { id: 'mc', name: 'Mercado Central', short: 'MC', type: 'Supermercado', color: '#1f5fa8', district: 'Rebouças', address: 'Rua Eng. Rebouças, 455 — Rebouças', open: 8, close: 22, rating: 4.6, reviews: 208, map: [112, 214], about: 'Supermercado completo, com laticínios, frios e mercearia. Ofertas atualizadas a cada reposição.' },
-  { id: 'he', name: 'Hortifruti da Esquina', short: 'HE', type: 'Hortifrúti', color: '#3f8a2a', district: 'Prado Velho', address: 'Av. Comendador Franco, 88 — Prado Velho', open: 7, close: 20, rating: 4.7, reviews: 189, map: [236, 304], about: 'Frutas, legumes e verduras de pequenos produtores da região, selecionados todas as manhãs.' },
-  { id: 'dl', name: 'Confeitaria Doce Lar', short: 'DL', type: 'Confeitaria', color: '#8e2f50', district: 'Cristo Rei', address: 'Av. Pres. Affonso Camargo, 2.742 — Cristo Rei', open: 9, close: 20, rating: 4.9, reviews: 276, map: [452, 128], about: 'Bolos caseiros, tortas e doces finos. O que não sai no dia vira oferta para a sua tarde.' },
-  { id: 'ab', name: 'Atacadão do Bairro', short: 'AB', type: 'Atacarejo', color: '#5b3fa0', district: 'Hauer', address: 'Av. Mal. Floriano Peixoto, 6.200 — Hauer', open: 7, close: 23, rating: 4.5, reviews: 431, map: [400, 440], about: 'Atacarejo com mercearia, bebidas e itens de limpeza. Lotes com validade próxima a preço de atacado.' },
-  { id: 'bc', name: 'Açougue Bom Corte', short: 'BC', type: 'Açougue', color: '#a3242d', district: 'Guabirotuba', address: 'Av. Salgado Filho, 315 — Guabirotuba', open: 7, close: 19, rating: 4.8, reviews: 167, map: [526, 262], about: 'Carnes selecionadas, cortes na hora e linguiças artesanais. Cortes resfriados com preço especial no fim do dia.' },
-  { id: 'td', name: 'Padaria Trigo Dourado', short: 'TD', type: 'Padaria', color: '#c98a1a', district: 'Rebouças', address: 'Rua Chile, 640 — Rebouças', open: 6, close: 20, rating: 4.7, reviews: 233, map: [176, 306], about: 'Padaria tradicional do bairro, com pães saindo do forno três vezes ao dia. O excedente da tarde vira oferta.' },
-  { id: 'fo', name: 'Panificadora Fornalha', short: 'PF', type: 'Padaria', color: '#a8432a', district: 'Hauer', address: 'Linha Verde (BR-476), 5.010 — Hauer', open: 6, close: 21, rating: 4.8, reviews: 198, map: [282, 420], about: 'Forno a lenha, baguetes de longa fermentação e doces do dia. Tudo embalado e pronto para retirar.' },
-  { id: 'pp', name: 'Pão & Prosa', short: 'P&P', type: 'Padaria', color: '#7a5230', district: 'Cristo Rei', address: 'Rua Lothário Meissner, 210 — Cristo Rei', open: 7, close: 20, rating: 4.9, reviews: 151, map: [552, 156], about: 'Padaria e confeitaria artesanal. Bolos inteiros e pães especiais com desconto no fim do dia.' },
-  { id: 'bv', name: 'Casa de Carnes Brasa Viva', short: 'BV', type: 'Açougue', color: '#c2410c', district: 'Parolin', address: 'Av. Mal. Floriano Peixoto, 3.077 — Parolin', open: 7, close: 19, rating: 4.7, reviews: 142, map: [146, 392], about: 'Especialista em cortes para churrasco e linguiças da casa, embalados a vácuo.' },
-  { id: 'cn', name: 'Açougue Corte Nobre', short: 'CN', type: 'Açougue', color: '#7d1d2c', district: 'Jardim Botânico', address: 'Rua Lothário Meissner, 390 — Jardim Botânico', open: 8, close: 20, rating: 4.8, reviews: 176, map: [330, 96], about: 'Cortes bovinos selecionados e aves resfriadas, embalados e etiquetados na hora.' },
-  { id: 'pc', name: 'Açougue Picanha & Cia', short: 'P&C', type: 'Açougue', color: '#9c3d1f', district: 'Guabirotuba', address: 'Av. Salgado Filho, 1.128 — Guabirotuba', open: 7, close: 19, rating: 4.6, reviews: 120, map: [586, 352], about: 'Carnes, frangos e embutidos com preço especial perto do vencimento.' },
-  { id: 'rt', name: 'Hortifruti Raiz da Terra', short: 'RT', type: 'Hortifrúti', color: '#4f8a2b', district: 'Jardim Botânico', address: 'Av. Comendador Franco, 1.045 — Jardim Botânico', open: 7, close: 20, rating: 4.8, reviews: 205, map: [186, 168], about: 'Verduras e legumes de produtores da Região Metropolitana de Curitiba, embalados no dia.' },
-  { id: 'vv', name: 'Quitanda Verde Vale', short: 'VV', type: 'Hortifrúti', color: '#2f7d4a', district: 'Guabirotuba', address: 'Av. Comendador Franco, 3.300 — Guabirotuba', open: 7, close: 19, rating: 4.6, reviews: 98, map: [470, 334], about: 'Frutas da estação em bandejas e sacos fechados, com desconto quando ficam bem maduras.' },
-  { id: 'ph', name: 'Supermercado Pinhão', short: 'SP', type: 'Supermercado', color: '#1d6b52', district: 'Prado Velho', address: 'Rua Imaculada Conceição, 1.500 — Prado Velho', open: 7, close: 22, rating: 4.7, reviews: 389, map: [380, 190], about: 'Supermercado de vizinhança a poucos passos da PUCPR, com laticínios, mercearia e frios.' },
-  { id: 'fc', name: 'Mercado Família Curitibana', short: 'FC', type: 'Supermercado', color: '#b45309', district: 'Parolin', address: 'Linha Verde (BR-476), 2.920 — Parolin', open: 8, close: 21, rating: 4.5, reviews: 164, map: [236, 376], about: 'Mercado familiar com mercearia, frios e bebidas. Lotes com validade próxima a preço de custo.' }
+  { id: 'bp', name: 'Mercado Bom Preço', short: 'BP', type: 'Supermercado', color: '#0f7b4a', district: 'Prado Velho', address: 'Rua Imaculada Conceição, 860, Prado Velho', open: 7, close: 22, rating: 4.8, reviews: 312, map: [404, 300], about: 'Mercado de bairro com padaria própria, açougue e hortifrúti. Publica ofertas de fim de prazo todos os dias às 10h e às 16h.' },
+  { id: 'pq', name: 'Padaria Cheirinho de Pão', short: 'CP', type: 'Padaria', color: '#b8691d', district: 'Jardim Botânico', address: 'Av. Pres. Affonso Camargo, 1.180, Jardim Botânico', open: 6, close: 21, rating: 4.9, reviews: 540, map: [238, 150], about: 'Pães de fermentação natural, salgados e doces. No fim da tarde, a produção do dia sai com até 50% de desconto.' },
+  { id: 'mc', name: 'Mercado Central', short: 'MC', type: 'Supermercado', color: '#1f5fa8', district: 'Rebouças', address: 'Rua Eng. Rebouças, 455, Rebouças', open: 8, close: 22, rating: 4.6, reviews: 208, map: [112, 214], about: 'Supermercado completo, com laticínios, frios e mercearia. Ofertas atualizadas a cada reposição.' },
+  { id: 'he', name: 'Hortifruti da Esquina', short: 'HE', type: 'Hortifrúti', color: '#3f8a2a', district: 'Prado Velho', address: 'Av. Comendador Franco, 88, Prado Velho', open: 7, close: 20, rating: 4.7, reviews: 189, map: [236, 304], about: 'Frutas, legumes e verduras de pequenos produtores da região, selecionados todas as manhãs.' },
+  { id: 'dl', name: 'Confeitaria Doce Lar', short: 'DL', type: 'Confeitaria', color: '#8e2f50', district: 'Cristo Rei', address: 'Av. Pres. Affonso Camargo, 2.742, Cristo Rei', open: 9, close: 20, rating: 4.9, reviews: 276, map: [452, 128], about: 'Bolos caseiros, tortas e doces finos. O que não sai no dia vira oferta para a sua tarde.' },
+  { id: 'ab', name: 'Atacadão do Bairro', short: 'AB', type: 'Atacarejo', color: '#5b3fa0', district: 'Hauer', address: 'Av. Mal. Floriano Peixoto, 6.200, Hauer', open: 7, close: 23, rating: 4.5, reviews: 431, map: [400, 440], about: 'Atacarejo com mercearia, bebidas e itens de limpeza. Lotes com validade próxima a preço de atacado.' },
+  { id: 'bc', name: 'Açougue Bom Corte', short: 'BC', type: 'Açougue', color: '#a3242d', district: 'Guabirotuba', address: 'Av. Salgado Filho, 315, Guabirotuba', open: 7, close: 19, rating: 4.8, reviews: 167, map: [526, 262], about: 'Carnes selecionadas, cortes na hora e linguiças artesanais. Cortes resfriados com preço especial no fim do dia.' },
+  { id: 'td', name: 'Padaria Trigo Dourado', short: 'TD', type: 'Padaria', color: '#c98a1a', district: 'Rebouças', address: 'Rua Chile, 640, Rebouças', open: 6, close: 20, rating: 4.7, reviews: 233, map: [176, 306], about: 'Padaria tradicional do bairro, com pães saindo do forno três vezes ao dia. O excedente da tarde vira oferta.' },
+  { id: 'fo', name: 'Panificadora Fornalha', short: 'PF', type: 'Padaria', color: '#a8432a', district: 'Hauer', address: 'Linha Verde (BR-476), 5.010, Hauer', open: 6, close: 21, rating: 4.8, reviews: 198, map: [282, 420], about: 'Forno a lenha, baguetes de longa fermentação e doces do dia. Tudo embalado e pronto para retirar.' },
+  { id: 'pp', name: 'Pão & Prosa', short: 'P&P', type: 'Padaria', color: '#7a5230', district: 'Cristo Rei', address: 'Rua Lothário Meissner, 210, Cristo Rei', open: 7, close: 20, rating: 4.9, reviews: 151, map: [552, 156], about: 'Padaria e confeitaria artesanal. Bolos inteiros e pães especiais com desconto no fim do dia.' },
+  { id: 'bv', name: 'Casa de Carnes Brasa Viva', short: 'BV', type: 'Açougue', color: '#c2410c', district: 'Parolin', address: 'Av. Mal. Floriano Peixoto, 3.077, Parolin', open: 7, close: 19, rating: 4.7, reviews: 142, map: [146, 392], about: 'Especialista em cortes para churrasco e linguiças da casa, embalados a vácuo.' },
+  { id: 'cn', name: 'Açougue Corte Nobre', short: 'CN', type: 'Açougue', color: '#7d1d2c', district: 'Jardim Botânico', address: 'Rua Lothário Meissner, 390, Jardim Botânico', open: 8, close: 20, rating: 4.8, reviews: 176, map: [330, 96], about: 'Cortes bovinos selecionados e aves resfriadas, embalados e etiquetados na hora.' },
+  { id: 'pc', name: 'Açougue Picanha & Cia', short: 'P&C', type: 'Açougue', color: '#9c3d1f', district: 'Guabirotuba', address: 'Av. Salgado Filho, 1.128, Guabirotuba', open: 7, close: 19, rating: 4.6, reviews: 120, map: [586, 352], about: 'Carnes, frangos e embutidos com preço especial perto do vencimento.' },
+  { id: 'rt', name: 'Hortifruti Raiz da Terra', short: 'RT', type: 'Hortifrúti', color: '#4f8a2b', district: 'Jardim Botânico', address: 'Av. Comendador Franco, 1.045, Jardim Botânico', open: 7, close: 20, rating: 4.8, reviews: 205, map: [186, 168], about: 'Verduras e legumes de produtores da Região Metropolitana de Curitiba, embalados no dia.' },
+  { id: 'vv', name: 'Quitanda Verde Vale', short: 'VV', type: 'Hortifrúti', color: '#2f7d4a', district: 'Guabirotuba', address: 'Av. Comendador Franco, 3.300, Guabirotuba', open: 7, close: 19, rating: 4.6, reviews: 98, map: [470, 334], about: 'Frutas da estação em bandejas e sacos fechados, com desconto quando ficam bem maduras.' },
+  { id: 'ph', name: 'Supermercado Pinhão', short: 'SP', type: 'Supermercado', color: '#1d6b52', district: 'Prado Velho', address: 'Rua Imaculada Conceição, 1.500, Prado Velho', open: 7, close: 22, rating: 4.7, reviews: 389, map: [380, 190], about: 'Supermercado de vizinhança a poucos passos da PUCPR, com laticínios, mercearia e frios.' },
+  { id: 'fc', name: 'Mercado Família Curitibana', short: 'FC', type: 'Supermercado', color: '#b45309', district: 'Parolin', address: 'Linha Verde (BR-476), 2.920, Parolin', open: 8, close: 21, rating: 4.5, reviews: 164, map: [236, 376], about: 'Mercado familiar com mercearia, frios e bebidas. Lotes com validade próxima a preço de custo.' }
 ];
 SEED_STORES.forEach((s) => { s.distance = kmFromMap(s.map); s.city = 'Curitiba/PR'; });
 
@@ -5510,7 +5534,7 @@ function storeHistory(storeId, days) {
 }
 
 /* =====================================================================
-   SalvaMercado — interface: toasts, modais, sacola, componentes
+   SalvaMercado, interface: toasts, modais, sacola, componentes
    ===================================================================== */
 
 const art = (key) => window.SMArt.url(key);
@@ -5628,7 +5652,7 @@ function controlHTML(p, big) {
     '<button type="button" data-action="inc" data-id="' + p.id + '" aria-label="Aumentar quantidade"' + (q >= p.stock ? ' disabled' : '') + '>' + ICON.plus + '</button></div>';
 }
 function productCard(p) {
-  const s = storeById(p.storeId) || { name: '—', id: '' };
+  const s = storeById(p.storeId) || { name: '-', id: '' };
   const fav = S.favs.indexOf(p.id) >= 0;
   const out = !isAvailable(p);
   return '<article class="pcard' + (out ? ' is-out' : '') + '" data-pid="' + p.id + '">' +
@@ -5986,7 +6010,7 @@ function downloadICS(code) {
   const f = (ts) => { const d = new Date(ts); return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + '00Z'; };
   const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SalvaMercado//Reserva//PT', 'BEGIN:VEVENT', 'UID:' + o.code + '@salvamercado', 'DTSTAMP:' + f(Date.now()),
     'DTSTART:' + f(Math.max(Date.now(), o.pickupFrom || o.createdAt)), 'DTEND:' + f(o.expiresAt),
-    'SUMMARY:Retirar reserva ' + o.code + ' — ' + s.name, 'LOCATION:' + s.address, 'DESCRIPTION:Apresente o código ' + o.code + ' no caixa. Pagamento na loja.', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    'SUMMARY:Retirar reserva ' + o.code + ', ' + s.name, 'LOCATION:' + s.address, 'DESCRIPTION:Apresente o código ' + o.code + ' no caixa. Pagamento na loja.', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
   a.download = 'reserva-' + o.code + '.ics';
@@ -6271,7 +6295,7 @@ function wireAuth(m, st, draw) {
     while (Math.hypot(mx - 300, my - 250) < 70) { mx = Math.round(90 + r() * 460); my = Math.round(80 + r() * 330); }
     const st0 = {
       id: sid, name: d.name, short: ((words[0] || 'L')[0] + (words[1] ? words[1][0] : '')).toUpperCase(), type: d.type, color: STORE_COLORS[Math.floor(r() * STORE_COLORS.length)],
-      district: d.district, address: d.street + ', ' + d.number + ' — ' + d.district, city: d.city, cep: maskCEP(d.cep), open: d.open, close: d.close,
+      district: d.district, address: d.street + ', ' + d.number + ', ' + d.district, city: d.city, cep: maskCEP(d.cep), open: d.open, close: d.close,
       distance: kmFromMap([mx, my]), rating: 5, reviews: 0, map: [mx, my],
       about: 'Nova loja parceira da SalvaMercado.', verified: false, phone: maskPhone(d.phone), createdAt: Date.now()
     };
@@ -6308,7 +6332,7 @@ function logout() {
 }
 
 /* =====================================================================
-   SalvaMercado — páginas, cabeçalho, rodapé/SAC, roteador e eventos
+   SalvaMercado, páginas, cabeçalho, rodapé/SAC, roteador e eventos
    ===================================================================== */
 
 /* ---------- Cabeçalho ---------- */
@@ -6807,7 +6831,7 @@ function pageStores() {
   const html = '<div class="page-band"><div class="container"><nav class="crumbs"><a href="#/">Início</a>' + ICON.chevR + '<span>Lojas parceiras</span></nav>' +
     '<h1 class="page-title">Lojas parceiras perto de você</h1><p class="page-sub">' + S.stores.length + ' estabelecimentos onde você pode reservar e retirar hoje, a partir da PUCPR (Prado Velho, Curitiba).</p></div></div>' +
     '<div class="container stores-page"><div class="chips" id="storeChips">' + types.map((t) => '<button type="button" class="chip' + (STORES_PAGE.type === t ? ' on' : '') + '" data-action="store-type" data-type="' + esc(t) + '">' + esc(t) + '</button>').join('') + '</div>' +
-    '<div class="stores-layout"><div class="stores-list" id="storesList"></div><div class="map-wrap"><div id="mapBox">' + mapSVG(S.stores) + '</div><p class="map-note">' + ICON.pin + 'Distâncias a partir da PUCPR — Prado Velho, Curitiba</p></div></div></div>';
+    '<div class="stores-layout"><div class="stores-list" id="storesList"></div><div class="map-wrap"><div id="mapBox">' + mapSVG(S.stores) + '</div><p class="map-note">' + ICON.pin + 'Distâncias a partir da PUCPR, Prado Velho, Curitiba</p></div></div></div>';
   return { html, mount: () => { drawStoresList(); wireMap(); } };
 }
 function drawStoresList() {
@@ -7118,7 +7142,7 @@ function pageAccount(params) {
     body = '<form class="card form account-form" id="acctForm" novalidate><h3>Dados pessoais</h3>' +
       '<div class="grid-2">' + fieldHTML({ id: 'acName', label: 'Nome completo', required: true, value: u.name, auto: 'name' }) + fieldHTML({ id: 'acCpf', label: 'CPF', value: u.cpf, readonly: true, hint: 'Para alterar o CPF, fale com o SAC.' }) + '</div>' +
       '<div class="grid-2">' + fieldHTML({ id: 'acEmail', label: 'E-mail', type: 'email', value: u.email, readonly: true, hint: 'Para alterar o e-mail de acesso, fale com o SAC.' }) + fieldHTML({ id: 'acPhone', label: 'WhatsApp', required: true, mask: 'phone', value: u.phone }) + '</div>' +
-      fieldHTML({ id: 'acStore', label: 'Loja de retirada preferida', type: 'select', options: S.stores.map((s) => [s.id, s.name + ' — ' + s.district]), value: S.prefs.storeId }) +
+      fieldHTML({ id: 'acStore', label: 'Loja de retirada preferida', type: 'select', options: S.stores.map((s) => [s.id, s.name + ', ' + s.district]), value: S.prefs.storeId }) +
       '<label class="check"><input type="checkbox" id="acOptin"' + (u.optin ? ' checked' : '') + '> Receber ofertas da minha região no WhatsApp</label>' +
       '<div class="form-actions"><button class="btn btn-primary">Salvar alterações</button></div></form>' +
       '<form class="card form account-form" id="pwForm" novalidate><h3>Alterar senha</h3><div class="grid-2">' + fieldHTML({ id: 'pwOld', label: 'Senha atual', type: 'password', required: true, auto: 'current-password' }) + fieldHTML({ id: 'pwNew', label: 'Nova senha', type: 'password', required: true, auto: 'new-password' }) + '</div>' +
@@ -7683,7 +7707,7 @@ function bizStoreForm(s, u) {
     fieldHTML({ id: 'sAbout', label: 'Sobre a loja', type: 'textarea', rows: 3, value: s.about }) +
     '<div class="field"><label>Cor da marca</label><div class="swatches">' + STORE_COLORS.map((c) => '<label class="swatch" style="--c:' + c + '"><input type="radio" name="sColor" value="' + c + '"' + (s.color === c ? ' checked' : '') + '><span></span></label>').join('') + '</div></div>' +
     '<div class="form-actions"><button class="btn btn-primary">Salvar alterações</button></div></form>' +
-    '<div class="card"><h3>Dados cadastrais</h3><dl class="kv"><div><dt>Razão social</dt><dd>' + esc(u.legalName || '—') + '</dd></div><div><dt>CNPJ</dt><dd>' + esc(u.cnpj || '—') + '</dd></div><div><dt>Responsável</dt><dd>' + esc(u.name) + '</dd></div><div><dt>E-mail de acesso</dt><dd>' + esc(u.email) + '</dd></div><div><dt>Situação</dt><dd>' + (s.verified ? '<span class="pill pill-green">' + ICON.check + 'Verificada</span>' : '<span class="pill pill-amber">Em análise · até 1 dia útil</span>') + '</dd></div></dl>' +
+    '<div class="card"><h3>Dados cadastrais</h3><dl class="kv"><div><dt>Razão social</dt><dd>' + esc(u.legalName || '-') + '</dd></div><div><dt>CNPJ</dt><dd>' + esc(u.cnpj || '-') + '</dd></div><div><dt>Responsável</dt><dd>' + esc(u.name) + '</dd></div><div><dt>E-mail de acesso</dt><dd>' + esc(u.email) + '</dd></div><div><dt>Situação</dt><dd>' + (s.verified ? '<span class="pill pill-green">' + ICON.check + 'Verificada</span>' : '<span class="pill pill-amber">Em análise · até 1 dia útil</span>') + '</dd></div></dl>' +
     '<p class="small muted">Para alterar razão social ou CNPJ, fale com a Central do parceiro: ' + COMPANY.partners + '.</p></div>';
 }
 function wireStoreForm(s) {
@@ -7894,7 +7918,7 @@ function onClick(e) {
       const u = currentUser();
       confirmDialog('Excluir sua conta?', 'Esta ação não pode ser desfeita. Seus dados pessoais serão apagados deste dispositivo.', 'Excluir conta', () => {
         S.orders.filter((o) => o.userId === u.id && orderStatus(o) === 'pendente').forEach(cancelOrder);
-        S.orders.forEach((o) => { if (o.userId === u.id) { o.userId = null; o.customer = { name: 'Cliente removido', phone: '—' }; } });
+        S.orders.forEach((o) => { if (o.userId === u.id) { o.userId = null; o.customer = { name: 'Cliente removido', phone: '-' }; } });
         S.users = S.users.filter((x) => x.id !== u.id);
         save('users'); save('orders');
         S.session = null; store.del(K.session); setTabSession(null); renderHeaderAccount();
@@ -9312,6 +9336,157 @@ async function sbBoot() {
   SBX.booting = false;
   cleanCart(); renderHeaderAccount(); updateCartBadge(); render();
 }
+
+
+/* =====================================================================
+   Painel master (equipe SalvaMercado), somente leitura.
+   Só aparece para contas incluídas na tabela admins (arquivo 08 do backend).
+   Todos os dados vêm de funções do banco que conferem a permissão.
+   ===================================================================== */
+const MST = { on: false, cache: {}, busy: {}, err: {}, fStore: '', fStatus: '' };
+
+const sbLoadUserBase = sbLoadUser;
+sbLoadUser = async function () {
+  const u = await sbLoadUserBase();
+  MST.on = false; MST.cache = {}; MST.err = {};
+  if (u && SB) {
+    try { const r = await SB.rpc('is_admin'); MST.on = !r.error && r.data === true; } catch (e) { MST.on = false; }
+  }
+  return u;
+};
+const renderHeaderAccountBase = renderHeaderAccount;
+renderHeaderAccount = function () {
+  renderHeaderAccountBase();
+  const menu = $('#acctMenu');
+  if (menu && MST.on && currentUser()) menu.insertAdjacentHTML('afterbegin', '<a href="#/master">' + ICON.shield + 'Painel master</a>');
+};
+
+function mstDT(iso) {
+  if (!iso) return 'Sem registro';
+  const d = new Date(iso);
+  return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function mstKey(tab) { return tab === 'pedidos' ? 'pedidos|' + MST.fStore + '|' + MST.fStatus : tab; }
+function mstLoad(tab, force) {
+  const key = mstKey(tab);
+  const hit = MST.cache[key];
+  if (!force && hit && Date.now() - hit.at < 60000) return hit.data;
+  if (MST.busy[key]) return null;
+  MST.busy[key] = true;
+  const call = tab === 'lojas' ? SB.rpc('admin_stores')
+    : tab === 'pedidos' ? SB.rpc('admin_orders', { p_store: MST.fStore || null, p_status: MST.fStatus || null, p_limit: 150 })
+    : tab === 'acessos' ? SB.rpc('admin_log_list', { p_limit: 150 })
+    : Promise.all([SB.rpc('admin_overview'), SB.rpc('admin_stores')]).then((rs) => ({ error: rs[0].error || rs[1].error, data: { o: rs[0].data, stores: rs[1].data } }));
+  Promise.resolve(call).then((r) => {
+    MST.busy[key] = false;
+    if (r.error) MST.err[key] = sbErr(r.error); else { MST.err[key] = null; MST.cache[key] = { at: Date.now(), data: r.data }; }
+    if (/^#\/master/.test(location.hash)) render();
+  }).catch((e) => { MST.busy[key] = false; MST.err[key] = sbErr(e); if (/^#\/master/.test(location.hash)) render(); });
+  return hit ? hit.data : null;
+}
+function mstNav(tab) {
+  const nav = [['geral', 'Visão geral', ICON.chart], ['lojas', 'Lojas', ICON.store], ['pedidos', 'Pedidos', ICON.box], ['acessos', 'Registro de acessos', ICON.shield]];
+  return '<aside class="biz-side"><div class="biz-store"><span class="avatar lg" style="--c:#082b2a;color:#face3d">' + ICON.eye + '</span><div><b>Painel master</b><small>Equipe SalvaMercado · somente leitura</small></div></div>' +
+    '<nav class="biz-nav">' + nav.map((n) => '<a class="' + (tab === n[0] ? 'on' : '') + '" href="#/master?tab=' + n[0] + '">' + n[2] + '<span>' + n[1] + '</span></a>').join('') + '</nav>' +
+    '<button class="btn btn-ghost btn-block btn-sm" type="button" id="mstRefresh">Atualizar dados</button></aside>';
+}
+function mstHead(small, title) { return '<header class="biz-head"><div><small>' + small + '</small><h1>' + title + '</h1></div></header>'; }
+function mstKpi(label, value, sub) { return '<div class="card mst-kpi"><small>' + label + '</small><b>' + value + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>'; }
+function mstWait(key) {
+  return MST.err[key] ? '<div class="card">' + emptyBox('Não foi possível carregar', esc(MST.err[key]), '') + '</div>'
+    : '<div class="card mst-wait">Carregando dados</div>';
+}
+function mstStatusPill(st) {
+  return st === 'retirado' ? '<span class="pill pill-green">Concluído</span>' : st === 'cancelado' ? '<span class="pill pill-red">Cancelado</span>' : '<span class="pill pill-amber">Em andamento</span>';
+}
+function mstStoresTable(list) {
+  if (!list.length) return emptyBox('Nenhuma loja cadastrada', 'As lojas aparecem aqui assim que se cadastram.', '');
+  return '<div class="tbl-wrap"><table class="tbl mst-tbl"><thead><tr><th>Loja</th><th>Bairro</th><th>Situação</th><th class="num">Ofertas ativas</th><th class="num">Pedidos no mês</th><th class="num">Em andamento</th><th class="num">Vendido no mês</th><th>Último pedido</th></tr></thead><tbody>' +
+    list.map((s) => '<tr><td><b>' + esc(s.name) + '</b><br><small class="muted">' + esc(s.type || '') + (s.has_owner ? '' : ' · sem conta vinculada') + '</small></td><td>' + esc(s.district || '') + '</td><td>' +
+      (s.paused ? '<span class="pill pill-gray">Pausada</span>' : !s.offers ? '<span class="pill pill-amber">Sem oferta</span>' : '<span class="pill pill-green">Ativa</span>') +
+      '</td><td class="num">' + s.offers + '</td><td class="num">' + s.orders_month + '</td><td class="num">' + s.pending + '</td><td class="num">' + brl(s.gmv_month) + '</td><td>' + mstDT(s.last_order) + '</td></tr>').join('') +
+    '</tbody></table></div>';
+}
+function mstOverview() {
+  const d = mstLoad('geral');
+  if (!d) return mstHead('Equipe SalvaMercado', 'Visão geral') + mstWait('geral');
+  const o = d.o, cancel = o.orders_month ? Math.round(o.cancel_month / o.orders_month * 100) : 0;
+  return mstHead('Atualizado às ' + mstDT(o.generated_at).slice(6), 'Visão geral') +
+    '<div class="mst-kpis">' +
+    mstKpi('Lojas ativas', o.stores_active, o.stores_total + ' cadastradas, ' + o.stores_paused + ' pausadas') +
+    mstKpi('Lojas sem oferta', o.stores_no_offer, 'Precisam de ativação') +
+    mstKpi('Ofertas no ar', o.offers_active, 'Com estoque e dentro da validade') +
+    mstKpi('Clientes cadastrados', o.customers, '') +
+    mstKpi('Pedidos hoje', o.orders_today, brl(o.gmv_today) + ' vendidos') +
+    mstKpi('Pedidos no mês', o.orders_month, brl(o.gmv_month) + ' vendidos') +
+    mstKpi('Em andamento agora', o.orders_pending, 'Aguardando retirada ou entrega') +
+    mstKpi('Cancelados no mês', cancel + '%', o.cancel_month + ' de ' + o.orders_month + ' pedidos') +
+    mstKpi('Economia dos clientes', brl(o.savings_month), 'No mês') +
+    mstKpi('Alimentos salvos', (Number(o.kg_month) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' kg', 'Pedidos concluídos no mês') +
+    '</div><section class="card"><h3>Lojas com mais pedidos no mês</h3>' + mstStoresTable((d.stores || []).slice(0, 5)) + '</section>';
+}
+function mstStores() {
+  const d = mstLoad('lojas');
+  return mstHead(d ? d.length + ' lojas' : 'Lojas parceiras', 'Lojas') + (d ? '<section class="card">' + mstStoresTable(d) + '</section>' : mstWait('lojas'));
+}
+function mstOrders() {
+  const key = mstKey('pedidos'), d = mstLoad('pedidos');
+  const filters = '<div class="mst-filters"><label>Loja<select id="mstStore"><option value="">Todas</option>' +
+    S.stores.slice().sort((a, b) => a.name.localeCompare(b.name)).map((s) => '<option value="' + esc(s.id) + '"' + (MST.fStore === s.id ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') +
+    '</select></label><label>Situação<select id="mstStatus">' +
+    [['', 'Todas'], ['pendente', 'Em andamento'], ['retirado', 'Concluídos'], ['cancelado', 'Cancelados']].map((x) => '<option value="' + x[0] + '"' + (MST.fStatus === x[0] ? ' selected' : '') + '>' + x[1] + '</option>').join('') +
+    '</select></label></div>';
+  const body = !d ? mstWait(key) : !d.length ? '<div class="card">' + emptyBox('Nenhum pedido encontrado', 'Mude os filtros para ver outros pedidos.', '') + '</div>'
+    : '<section class="card"><p class="mst-note">' + ICON.shield + '<span>A lista mostra só o primeiro nome e o bairro. Abrir um pedido mostra os dados completos do cliente e fica registrado.</span></p>' +
+      '<div class="tbl-wrap"><table class="tbl mst-tbl"><thead><tr><th>Código</th><th>Data</th><th>Loja</th><th>Cliente</th><th>Tipo</th><th>Pagamento</th><th>Situação</th><th class="num">Total</th><th></th></tr></thead><tbody>' +
+      d.map((o) => '<tr><td><b>' + esc(o.code) + '</b></td><td>' + mstDT(o.created_at) + '</td><td>' + esc(o.store) + '</td><td>' + esc(o.customer || 'Cliente') + (o.district ? '<br><small class="muted">' + esc(o.district) + '</small>' : '') +
+        '</td><td>' + (o.mode === 'delivery' ? 'Entrega' : 'Retirada') + '</td><td>' + esc(PAY_LABEL[o.pay_method] || o.pay_method) + (o.paid ? '<br><small class="ok">Pago</small>' : '') + '</td><td>' + mstStatusPill(o.status) +
+        '</td><td class="num">' + brl(o.total) + '</td><td><button class="btn btn-ghost btn-sm" type="button" data-mst-order="' + esc(o.code) + '">Abrir</button></td></tr>').join('') +
+      '</tbody></table></div></section>';
+  return mstHead(d ? d.length + ' pedidos mais recentes' : 'Pedidos', 'Pedidos') + filters + body;
+}
+function mstLog() {
+  const d = mstLoad('acessos');
+  const body = !d ? mstWait('acessos') : !d.length ? '<div class="card">' + emptyBox('Nenhum acesso registrado', 'Cada vez que alguém da equipe abre um pedido completo, o acesso aparece aqui.', '') + '</div>'
+    : '<section class="card"><div class="tbl-wrap"><table class="tbl mst-tbl"><thead><tr><th>Quando</th><th>Quem</th><th>O que fez</th><th>Pedido</th></tr></thead><tbody>' +
+      d.map((l) => '<tr><td>' + mstDT(l.at) + '</td><td>' + esc(l.admin) + '</td><td>' + esc(l.action) + '</td><td>' + esc(l.target || '') + '</td></tr>').join('') + '</tbody></table></div></section>';
+  return mstHead('Acessos a dados pessoais', 'Registro de acessos') + body;
+}
+async function mstOpenOrder(code) {
+  if (!window.confirm('Abrir o pedido ' + code + ' mostra nome, telefone e endereço do cliente.\n\nEste acesso fica registrado com o seu e-mail. Continuar?')) return;
+  const r = await SB.rpc('admin_order_detail', { p_code: code });
+  if (r.error) { toast(sbErr(r.error), { type: 'error' }); return; }
+  const o = r.data, a = o.address;
+  delete MST.cache.acessos;
+  const row = (k, v) => '<div><dt>' + k + '</dt><dd>' + v + '</dd></div>';
+  openModal('<div class="mst-order"><h2>Pedido ' + esc(o.code) + '</h2><p class="muted">' + esc(o.store) + ' · ' + mstDT(o.created_at) + '</p><dl class="mst-dl">' +
+    row('Situação', mstStatusPill(o.status) + ' ' + esc(o.stage || '')) +
+    row('Cliente', esc(o.customer_name || '')) + row('Telefone', esc(o.customer_phone || 'Não informado')) +
+    row('Tipo', o.mode === 'delivery' ? 'Entrega' : 'Retirada na loja') +
+    (a ? row('Endereço', esc([a.street, a.number, a.comp, a.district, a.cep].filter(Boolean).join(', '))) : '') +
+    row('Pagamento', esc(PAY_LABEL[o.pay_method] || o.pay_method) + (o.paid ? ' · pago' : ' · não pago')) +
+    row('Itens', (o.items || []).map((i) => esc(i.qty + ' x ' + i.name) + ' <small class="muted">' + brl(i.unit) + '</small>').join('<br>')) +
+    row('Total', '<b>' + brl(o.total) + '</b>' + (+o.fee ? ' (entrega ' + brl(o.fee) + ')' : '') + (+o.discount ? ' (desconto ' + brl(o.discount) + ')' : '')) +
+    (o.notes ? row('Observação', esc(o.notes)) : '') + (o.cancel_by ? row('Cancelado por', esc(o.cancel_by)) : '') +
+    '</dl><p class="mst-note">' + ICON.shield + '<span>Acesso registrado. Use estes dados só para suporte ao pedido.</span></p></div>', { label: 'Pedido ' + o.code });
+}
+function pageMaster(params) {
+  if (!sbOn() || !currentUser() || !MST.on) {
+    return '<div class="container section">' + emptyBox('Acesso restrito', 'Esta área é exclusiva da equipe SalvaMercado.', '<a class="btn btn-primary" href="#/">Ir para o início</a>') + '</div>';
+  }
+  const tab = params.get('tab') || 'geral';
+  const main = tab === 'lojas' ? mstStores() : tab === 'pedidos' ? mstOrders() : tab === 'acessos' ? mstLog() : mstOverview();
+  return {
+    html: '<div class="biz container mst">' + mstNav(tab) + '<section class="biz-main">' + main + '</section></div>',
+    mount: () => {
+      const rf = $('#mstRefresh'); if (rf) rf.addEventListener('click', () => { MST.cache = {}; render(); });
+      const fs = $('#mstStore'); if (fs) fs.addEventListener('change', () => { MST.fStore = fs.value; render(); });
+      const ft = $('#mstStatus'); if (ft) ft.addEventListener('change', () => { MST.fStatus = ft.value; render(); });
+      $$('[data-mst-order]').forEach((b) => b.addEventListener('click', () => mstOpenOrder(b.dataset.mstOrder)));
+    }
+  };
+}
+ROUTES.push([/^#\/master$/, pageMaster]);
 
 })();
 </script>
